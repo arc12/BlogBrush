@@ -172,7 +172,7 @@ namespace BlogBrush
         {
             currentEntryMD = new UrlMD(Type, currentEntryMD.References);
             //check if the user navigated away.
-            //if they ended up in the URL hierarchy then change the stored URL as well
+            //if they ended up in the URL hierarchy then "reject" the old one and add the new
             //if they ended up at a different URL, add the new URL as if it was auto-extracted and mark the original URL as type=""
             String navUrl = CleanTrailingSlash(webBrowser.Url.ToString());
             if (navUrl == currentEntryUrl)
@@ -183,7 +183,8 @@ namespace BlogBrush
             {
                 if (currentEntryUrl.IndexOf(navUrl) == 0)
                 {
-                    UrlSet.Remove(currentEntryUrl);
+                    ProtectedAdd2UrlSet(currentEntryUrl, new UrlMD("reject", 0));
+                    //UrlSet.Remove(currentEntryUrl);
                     currentEntryUrl = navUrl;
                     ProtectedAdd2UrlSet(currentEntryUrl, currentEntryMD);
                 }

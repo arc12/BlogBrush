@@ -1,0 +1,3 @@
+This is a single-purpose prog to allow a series of potentially-interesting blog URLs to be viewed and classified, while trawling for more URLs from the contents.
+
+Needs some explanation etc...
