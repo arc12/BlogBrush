@@ -141,16 +141,23 @@ namespace BlogBrush
                 grpExtract.Enabled = false;
                 btnAbort.Enabled = true;
                 abort = false;
-                webBrowser.Navigate(currentEntryUrl);
-                txtAddress.Text = currentEntryUrl;
-                //wait for the browser object to load the page
-                while ((webBrowser.ReadyState != WebBrowserReadyState.Complete) && !abort)
+                try
                 {
-                    Application.DoEvents();
+                    webBrowser.Navigate(currentEntryUrl);
+                    txtAddress.Text = currentEntryUrl;
+                    //wait for the browser object to load the page
+                    while ((webBrowser.ReadyState != WebBrowserReadyState.Complete) && !abort)
+                    {
+                        Application.DoEvents();
+                    }
+                    grpExtract.Enabled = true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Problem loading: suggest select \"defer\" or \"Reject\"");
                 }
                 btnAbort.Enabled = false;
                 grpDecisions.Enabled = true;
-                grpExtract.Enabled = true;
                 //show progress
                 progressBar.Value = 100 * currentIndex / UrlSet.Count;
             }
@@ -172,7 +179,7 @@ namespace BlogBrush
         {
             currentEntryMD = new UrlMD(Type, currentEntryMD.References);
             //check if the user navigated away.
-            //if they ended up in the URL hierarchy then "reject" the old one and add the new
+            //if they ended up at a different URL then "reject" the old one and add the new with the chosen type
             //if they ended up at a different URL, add the new URL as if it was auto-extracted and mark the original URL as type=""
             String navUrl = CleanTrailingSlash(webBrowser.Url.ToString());
             if (navUrl == currentEntryUrl)
@@ -181,18 +188,10 @@ namespace BlogBrush
             }
             else
             {
-                if (currentEntryUrl.IndexOf(navUrl) == 0)
-                {
-                    ProtectedAdd2UrlSet(currentEntryUrl, new UrlMD("reject", 0));
-                    //UrlSet.Remove(currentEntryUrl);
-                    currentEntryUrl = navUrl;
-                    ProtectedAdd2UrlSet(currentEntryUrl, currentEntryMD);
-                }
-                else
-                {
-                    ProtectedAdd2NewUrlSet(navUrl, new UrlMD(Type, 0));
-                    currentEntryMD = new UrlMD("", currentEntryMD.References);
-                }
+                UrlSet[currentEntryUrl] = new UrlMD("reject", 0);
+                //UrlSet.Remove(currentEntryUrl);
+                currentEntryUrl = navUrl;
+                ProtectedAdd2UrlSet(currentEntryUrl, currentEntryMD);
             }
             grpFile.Enabled = true;
             btnSave.Enabled = true;
@@ -327,6 +326,29 @@ namespace BlogBrush
                 }
                 sr.Close();
 
+                //Repeat for the "New" list
+                FileInfo fiNew = new FileInfo(fi.FullName.Replace(".csv", "_New.csv"));
+                if (fiNew.Exists)
+                {
+                    sr = fiNew.OpenText();
+                    while (!sr.EndOfStream)
+                    {
+                        String line = sr.ReadLine().Trim();
+                        String[] parts = line.Split(',');
+                        UrlMD md;
+                        if (parts.Length == 1)
+                        {
+                            md = new UrlMD("", 0);//allows for a simple URL list on 1st invokation
+                        }
+                        else
+                        {
+                            md = new UrlMD(parts[1].Trim(), Convert.ToInt32(parts[2].Trim()));
+                        }
+                        ProtectedAdd2NewUrlSet(CleanTrailingSlash(parts[0].Trim()), md);
+                    }
+                    sr.Close();
+                }
+
                 //read from whitelist and blacklist files (one domain per line) from same directory
                 fi = new FileInfo(Path.Combine(Path.GetDirectoryName(openFileDialog.FileName),"WhiteDomains"));
                 if (fi.Exists)
@@ -380,7 +402,10 @@ namespace BlogBrush
                     tw.WriteLine(String.Format("{0},{1},{2}",
                         de.Key.ToString(),md.Type,md.References.ToString()));
                 }
+                tw.Close();
+
                 //repeat for the "NEW URLS" (which may have some user types, although not usually)
+                tw = new StreamWriter(saveFileDialog.FileName.Replace(".csv","_New.csv"));
                 foreach (DictionaryEntry de in NewUrlSet)
                 {
                     UrlMD md = (UrlMD)de.Value;
