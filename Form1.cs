@@ -125,6 +125,7 @@ namespace BlogBrush
                 currentEntryMD = (UrlMD)UrlSet[currentEntryUrl];
                 while ((currentEntryMD.Type != "") && url2get)
                 {
+                    currentIndex++;
                     url2get = UrlSetEnumerator.MoveNext();
                     if (url2get)
                     {
@@ -154,7 +155,12 @@ namespace BlogBrush
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Problem loading: suggest select \"defer\" or \"Reject\"");
+
+                    webBrowser.Stop();
+                    MessageBox.Show("Problem loading:" +
+                        "\r\n1. select \"defer\" or \"Reject\";" +
+                        "\r\n2. save;" +
+                        "\r\n3. close the program.");
                 }
                 btnAbort.Enabled = false;
                 grpDecisions.Enabled = true;
@@ -163,7 +169,7 @@ namespace BlogBrush
             }
             else
             {
-                MessageBox.Show("No more URLs");
+                MessageBox.Show("No more URLs in loaded set.\r\nReload the CSV file if new URLs have been added.");
                 grpDecisions.Enabled = false;
                 grpExtract.Enabled = false;
                 progressBar.Value = 100;
@@ -175,9 +181,10 @@ namespace BlogBrush
         /// 
         /// </summary>
         /// <param name="Type"></param>
-        public void UpdateCurrentEntryType(String Type)
+        public void UpdateCurrentEntryType(String Type, String FeedUrl)
         {
-            currentEntryMD = new UrlMD(Type, currentEntryMD.References);
+            currentEntryMD.Type = Type;
+            currentEntryMD.FeedUrl = FeedUrl;
             //check if the user navigated away.
             //if they ended up at a different URL then "reject" the old one and add the new with the chosen type
             //if they ended up at a different URL, add the new URL as if it was auto-extracted and mark the original URL as type=""
@@ -188,7 +195,7 @@ namespace BlogBrush
             }
             else
             {
-                UrlSet[currentEntryUrl] = new UrlMD("reject", 0);
+                UrlSet[currentEntryUrl] = new UrlMD("reject");
                 //UrlSet.Remove(currentEntryUrl);
                 currentEntryUrl = navUrl;
                 ProtectedAdd2UrlSet(currentEntryUrl, currentEntryMD);
@@ -197,7 +204,35 @@ namespace BlogBrush
             btnSave.Enabled = true;
         }
 
- 
+        public void UpdateCurrentEntryType(String Type)
+        {
+            UpdateCurrentEntryType(Type, "");
+        }
+
+        /// <summary>
+        /// tries to look for a feed URL in the HTML of the document currently in the browser
+        /// </summary>
+        /// <returns></returns>
+        public String FindFeed()
+        {
+            String feed = "";
+            foreach (HtmlElement linkElem in webBrowser.Document.GetElementsByTagName("link"))
+            {
+                //prefer RSS
+                if (linkElem.GetAttribute("type") == "application/rss+xml")
+                {
+                    feed = linkElem.GetAttribute("href");
+                    return feed;
+                }
+                if (linkElem.GetAttribute("type") == "application/atom+xml")
+                {
+                    feed = linkElem.GetAttribute("href");
+                    return feed;
+                }
+            }
+            return feed;
+        }
+
         /// <summary>
         /// grabs links from current page if not already known and discarding pdf, doc, images etc
         /// uses WhileDomains and Black domains to pre-filter the list then
@@ -236,7 +271,7 @@ namespace BlogBrush
                                     if (IsWhiteListed(link))
                                     {
                                         //just add to the NewUrlSet without showing to user
-                                        ProtectedAdd2NewUrlSet(link, new UrlMD("", 0));
+                                        ProtectedAdd2NewUrlSet(link, new UrlMD());
                                     }
                                     else
                                     {
@@ -264,7 +299,7 @@ namespace BlogBrush
             String[] Scan = frmUC.Scan;
             for (int i = 0; i < Scan.Length; i++)
             {
-                ProtectedAdd2NewUrlSet(Scan[i].Trim(), new UrlMD("", 0));
+                ProtectedAdd2NewUrlSet(Scan[i].Trim(), new UrlMD());
             }
             String[] Whitelist = frmUC.Whitelist;
             for (int i = 0; i < Whitelist.Length; i++)
@@ -316,11 +351,11 @@ namespace BlogBrush
                     UrlMD md;
                     if (parts.Length == 1)
                     {
-                        md = new UrlMD("", 0);//allows for a simple URL list on 1st invokation
+                        md = new UrlMD();//allows for a simple URL list on 1st invokation
                     }
                     else
                     {
-                        md = new UrlMD( parts[1].Trim(),Convert.ToInt32(parts[2].Trim()));
+                        md = new UrlMD(parts[1].Trim(), Convert.ToInt32(parts[2].Trim()), parts[3].Trim());
                     }
                     ProtectedAdd2UrlSet(CleanTrailingSlash(parts[0].Trim()), md);
                 }
@@ -338,7 +373,7 @@ namespace BlogBrush
                         UrlMD md;
                         if (parts.Length == 1)
                         {
-                            md = new UrlMD("", 0);//allows for a simple URL list on 1st invokation
+                            md = new UrlMD();//allows for a simple URL list on 1st invokation
                         }
                         else
                         {
@@ -399,18 +434,15 @@ namespace BlogBrush
                 foreach (DictionaryEntry de in UrlSet)
                 {
                     UrlMD md = (UrlMD)de.Value;
-                    tw.WriteLine(String.Format("{0},{1},{2}",
-                        de.Key.ToString(),md.Type,md.References.ToString()));
+                    tw.WriteLine(String.Format("{0},{1},{2},{3}",
+                        de.Key.ToString(), md.Type, md.SetId.ToString(), md.FeedUrl.ToString()));
                 }
-                tw.Close();
-
                 //repeat for the "NEW URLS" (which may have some user types, although not usually)
-                tw = new StreamWriter(saveFileDialog.FileName.Replace(".csv","_New.csv"));
                 foreach (DictionaryEntry de in NewUrlSet)
                 {
                     UrlMD md = (UrlMD)de.Value;
-                    tw.WriteLine(String.Format("{0},{1},{2}",
-                        de.Key.ToString(), md.Type, md.References.ToString()));
+                    tw.WriteLine(String.Format("{0},{1},{2},{3}",
+                        de.Key.ToString(), md.Type, md.SetId.ToString(), md.FeedUrl.ToString()));
                 }
                 tw.Close();
 
@@ -451,8 +483,8 @@ namespace BlogBrush
         private void btnBlog_Click(object sender, EventArgs e)
         {
             //a blog from a member of the community without commercial overtones
-            UpdateCurrentEntryType("blog");
-            ExtractLinks();
+            UpdateCurrentEntryType("blog", FindFeed());
+            if (chkAutoExtract.Checked) { ExtractLinks(); }
             UrlSetIterate();
         }
 
@@ -460,7 +492,7 @@ namespace BlogBrush
         {
             //a news feed or similar from a commercial provider
             UpdateCurrentEntryType("commercial");
-            ExtractLinks();
+            if (chkAutoExtract.Checked) { ExtractLinks(); }
             UrlSetIterate();
         }
 

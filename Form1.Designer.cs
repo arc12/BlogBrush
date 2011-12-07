@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.grpDecisions = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.btnDefer = new System.Windows.Forms.Button();
             this.btnWebPage = new System.Windows.Forms.Button();
             this.btnReject = new System.Windows.Forms.Button();
@@ -39,7 +40,6 @@
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.grpExtract = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.btnExtract = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -48,7 +48,7 @@
             this.webBrowser = new System.Windows.Forms.WebBrowser();
             this.txtAddress = new System.Windows.Forms.TextBox();
             this.btnAbort = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
+            this.chkAutoExtract = new System.Windows.Forms.CheckBox();
             this.grpDecisions.SuspendLayout();
             this.grpFile.SuspendLayout();
             this.grpExtract.SuspendLayout();
@@ -71,6 +71,15 @@
             this.grpDecisions.TabIndex = 0;
             this.grpDecisions.TabStop = false;
             this.grpDecisions.Text = "URL Decisions";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(10, 16);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(59, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "TEL Types";
             // 
             // btnDefer
             // 
@@ -168,24 +177,15 @@
             // grpExtract
             // 
             this.grpExtract.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.grpExtract.Controls.Add(this.label1);
+            this.grpExtract.Controls.Add(this.chkAutoExtract);
             this.grpExtract.Controls.Add(this.btnExtract);
             this.grpExtract.Enabled = false;
             this.grpExtract.Location = new System.Drawing.Point(652, 375);
             this.grpExtract.Name = "grpExtract";
-            this.grpExtract.Size = new System.Drawing.Size(118, 76);
+            this.grpExtract.Size = new System.Drawing.Size(118, 88);
             this.grpExtract.TabIndex = 2;
             this.grpExtract.TabStop = false;
-            this.grpExtract.Text = "Extract";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 51);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(112, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "done auto on decision";
+            this.grpExtract.Text = "Extract URLs";
             // 
             // btnExtract
             // 
@@ -193,7 +193,7 @@
             this.btnExtract.Name = "btnExtract";
             this.btnExtract.Size = new System.Drawing.Size(102, 24);
             this.btnExtract.TabIndex = 0;
-            this.btnExtract.Text = "Extract URLs";
+            this.btnExtract.Text = "Extract Now";
             this.btnExtract.UseVisualStyleBackColor = true;
             this.btnExtract.Click += new System.EventHandler(this.btnExtract_Click);
             // 
@@ -259,14 +259,15 @@
             this.btnAbort.UseVisualStyleBackColor = true;
             this.btnAbort.Click += new System.EventHandler(this.btnAbort_Click);
             // 
-            // label2
+            // chkAutoExtract
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(10, 16);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(59, 13);
-            this.label2.TabIndex = 6;
-            this.label2.Text = "TEL Types";
+            this.chkAutoExtract.AutoSize = true;
+            this.chkAutoExtract.Location = new System.Drawing.Point(8, 64);
+            this.chkAutoExtract.Name = "chkAutoExtract";
+            this.chkAutoExtract.Size = new System.Drawing.Size(104, 17);
+            this.chkAutoExtract.TabIndex = 1;
+            this.chkAutoExtract.Text = "auto on decision";
+            this.chkAutoExtract.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -314,10 +315,10 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
         private System.Windows.Forms.Label lblUrlCount;
         private System.Windows.Forms.WebBrowser webBrowser;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtAddress;
         private System.Windows.Forms.Button btnAbort;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox chkAutoExtract;
     }
 }
 

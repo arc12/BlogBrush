@@ -21,22 +21,64 @@ namespace BlogBrush
 
     public class UrlMD
     {
-        int references;
-        String type;
-        public int References
+        String feedUri;
+        String urlType;
+        int setId;
+        
+        /// <summary>
+        /// An Id for a set of URLs. Newly added ones are assigned 0. May be set to other values outside
+        /// this application. This app always preserves the value.
+        /// </summary>
+        public int SetId
         {
-            get { return references; }
-
+            get { return setId; }
         }
+
+        /// <summary>
+        /// If one can be extracted from the HTML, this contains a feed URL. Otherwise is ""
+        /// </summary>
+        public String FeedUrl
+        {
+            get { return feedUri; }
+            set { feedUri = value; }
+        }
+
+        /// <summary>
+        /// Once classified this holds the assigned class.
+        /// </summary>
         public String Type
         {
-            get { return type; }
+            get { return urlType; }
+            set { urlType = value; }
         }
 
-        public UrlMD(String typ, int refs)
+        public UrlMD(String Type, int SetId, String FeedUri)
         {
-            references = refs;
-            type=typ;
+            feedUri = FeedUri;
+            urlType = Type;
+            setId = SetId;
         }
+
+        public UrlMD(String Type, int SetId)
+        {
+            feedUri = "";
+            urlType = Type;
+            setId = SetId;
+        }
+
+        public UrlMD(String Type)
+        {
+            feedUri = "";
+            urlType = Type;
+            setId=0;
+        }
+
+        public UrlMD()
+        {
+            feedUri = "";
+            urlType = "";
+            setId = 0;
+        }
+
     }
 }
